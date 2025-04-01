@@ -1,0 +1,43 @@
+# 환경 변수 및 API 키
+.env
+
+# 가상환경
+.venv/
+venv/
+ENV/
+env/
+UV_ENV/
+
+# 파이썬 캐시 파일
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+
+# 배포 파일
+dist/
+build/
+*.manifest
+*.spec
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Streamlit
+.streamlit/
+
+# 로그 파일
+*.log
+
+# 운영체제 파일
+.DS_Store
+Thumbs.db
+
+# IDE 파일
+.idea/
+.vscode/
+*.swp
+*.swo

@@ -1,0 +1,13 @@
+{
+  "risk_preference": 5,
+  "investment_period": "\uc911\uae30 (1-6\uac1c\uc6d4)",
+  "investment_amount": 10000,
+  "preferred_sectors": [
+    "\uc5d0\ub108\uc9c0",
+    "\uae30\uc220",
+    "\uc720\ud2f8\ub9ac\ud2f0",
+    "\uae08\uc735"
+  ],
+  "investment_goal": "\uc131\uc7a5",
+  "trading_style": "\uc2a4\uc719 \ud2b8\ub808\uc774\ub529"
+}

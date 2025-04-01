@@ -1,0 +1,15 @@
+{
+  "sequential-thinking": {
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+  },
+  "yahoo_finance": {
+    "command": "python",
+    "args": ["mcp_servers/yahoo_finance_mcp.py"],
+    "transport": "stdio"
+  },
+  "fetch": {
+    "command": "uvx",
+    "args": ["mcp-server-fetch"]
+  }
+}

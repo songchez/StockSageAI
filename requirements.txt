@@ -1,0 +1,16 @@
+langchain==0.3.21
+langchain-anthropic==0.3.10
+langchain-community==0.3.20
+langchain-core==0.3.49
+langchain-mcp-adapters==0.0.6
+langchain-openai==0.3.11
+langchain-teddynote==0.3.45
+langchain-text-splitters==0.3.7
+langgraph==0.3.21
+langgraph-checkpoint==2.0.23
+langgraph-prebuilt==0.1.7
+langgraph-sdk==0.1.60
+langsmith==0.3.19
+streamlit==1.44.0
+nest-asyncio==1.6.0
+langchain_google_genai==2.1.2
