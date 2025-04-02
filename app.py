@@ -1,5 +1,5 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessage
 from langgraph.graph import StateGraph, END,START
 from typing import TypedDict, Annotated
 from langgraph.graph.message import add_messages
@@ -10,9 +10,8 @@ import streamlit as st
 from dotenv import load_dotenv
 from tools.search_tools import search_news, search_DDG
 from langgraph.prebuilt import ToolNode, tools_condition
+from utils.visualize import visualize_graph_in_streamlit
 
-tools = [search_news, search_DDG]
-tool_node = ToolNode(tools)
 
 
 # 환경 변수 로드
@@ -20,6 +19,10 @@ load_dotenv()
 
 # LangSmith 로깅 설정
 logging.langsmith("pr-dear-ratepayer-64")
+
+# Tools초기화
+tools = [search_news, search_DDG]
+tool_node = ToolNode(tools)
 
 # LangGraph를 위한 상태 타입 정의
 class State(TypedDict):
@@ -59,7 +62,6 @@ workflow.add_edge("agent", END)
 # 그래프 컴파일
 graph = workflow.compile(checkpointer=memory)
 
-from utils.visualize import visualize_graph_in_streamlit
 
 
 
@@ -73,11 +75,9 @@ config = RunnableConfig(
 
 # 사이드바에 그래프 시각화 추가
 with st.sidebar:
-    st.title("🤖 간단한 LangGraph 챗봇")
-    st.header("📊 LangGraph 시각화")
-    xray_mode = st.checkbox("X-ray 모드 (상세 정보 표시)", value=False)
-    st.write("챗봇 그래프 구조")
-    visualize_graph_in_streamlit(graph, xray=xray_mode)
+    st.title("🔺 주식투자를 위한 LangGraph 챗봇")
+    st.header("Structure of LangGraph")
+    visualize_graph_in_streamlit(graph, xray=False)
 
 
 # 세션 상태 초기화
@@ -108,14 +108,28 @@ if prompt := st.chat_input("메시지를 입력하세요"):
     # 사용자 메시지 저장
     st.session_state.messages.append(HumanMessage(content=prompt))
 
-    # 그래프 실행
-    with st.spinner("생각 중..."):
-        result = graph.invoke({"messages": [("user", prompt)]}, config=config)
-        
+    # 응답 준비
+    with st.chat_message("assistant"):
+        message_placeholder = st.empty()
+        FULL_RESPONSE = ""
+
+        # 스트리밍 응답 처리
+        with st.spinner("생각 중..."):
+            for event in graph.stream(
+                input={"messages": [("user", prompt)]},
+                config=config,
+                output_keys=["messages"]
+            ):
+                for key, value in event.items():
+                    if value and "messages" in value:
+                        # 새로운 메시지 내용 추출
+                        new_content = value["messages"][-1].content
+                        if new_content and isinstance(new_content, str) and new_content != FULL_RESPONSE:
+                            # 업데이트된 전체 응답으로 설정
+                            FULL_RESPONSE = new_content
+                            # 화면에 메시지 업데이트
+                            message_placeholder.markdown(FULL_RESPONSE)
     
     # 결과에서 AI 응답 추출 및 표시
-    ai_message = result["messages"][-1]
+    ai_message = AIMessage(content=FULL_RESPONSE)
     st.session_state.messages.append(ai_message)
-    
-    with st.chat_message("assistant"):
-        st.write(ai_message.content)

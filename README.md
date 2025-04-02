@@ -34,7 +34,7 @@ LANGCHAIN_TRACING_V2=true
 # .streamlit/secrets.toml
 GOOGLE_API_KEY = "your-google-api-key"
 LANGCHAIN_API_KEY = "your-langchain-api-key"
-LANGCHAIN_PROJECT = "your-project-key"
+LANGCHAIN_PROJECT = "your_langchain_project_key"
 LANGCHAIN_TRACING_V2 = "true"
 ```
 
