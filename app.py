@@ -1,18 +1,18 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
+
 from langchain_core.messages import HumanMessage, AIMessage
 from langgraph.graph import StateGraph, END,START
-from typing import TypedDict, Annotated
-from langgraph.graph.message import add_messages
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.runnables import RunnableConfig
 from langchain_teddynote import logging
 import streamlit as st
 from dotenv import load_dotenv
-from tools.search_tools import search_news, search_DDG
-from langgraph.prebuilt import ToolNode, tools_condition
+from langgraph.prebuilt import tools_condition
 from utils.visualize import visualize_graph_in_streamlit
-
-
+from graph_state import State
+from nodes.generate_reponse import tool_node, generate_response
+from nodes.determine_intent import determine_intent
+from nodes.technical_analysis import technical_analysis
+from nodes.router import router
 
 # 환경 변수 로드
 load_dotenv()
@@ -20,44 +20,33 @@ load_dotenv()
 # LangSmith 로깅 설정
 logging.langsmith("pr-dear-ratepayer-64")
 
-# Tools초기화
-tools = [search_news, search_DDG]
-tool_node = ToolNode(tools)
-
-# LangGraph를 위한 상태 타입 정의
-class State(TypedDict):
-    messages: Annotated[list, add_messages]
-
-# 채팅 노드 정의
-def chatbot(state: State):
-    # Gemini 모델 사용
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-pro-exp-03-25",
-        temperature=0.1,
-        max_output_tokens=2048
-    ).bind_tools(tools)
-
-    # 응답 메시지 추가
-    return {
-        "messages": [llm.invoke(state["messages"])]
-    }
-
 
 
 memory = MemorySaver()
 workflow = StateGraph(State)
 # 노드 추가
-workflow.add_node("agent", chatbot)
+workflow.add_node("superviser", generate_response)
 workflow.add_node("tools", tool_node)
+workflow.add_node("determine_intent", determine_intent)
+workflow.add_node("technical_analysis", technical_analysis)
 
 # 엣지 추가
-workflow.add_edge(START, "agent")
-workflow.add_conditional_edges("agent", tools_condition)
+workflow.add_edge(START, "determine_intent")
+workflow.add_conditional_edges(
+    "determine_intent",
+    router,
+    {
+        "technical_analysis": "technical_analysis",
+        "superviser": "superviser"
+    }
+)
+workflow.add_edge("technical_analysis", "superviser")
+workflow.add_conditional_edges("superviser", tools_condition)
 
 # 도구 노드에서 에이전트 노드로 순환 연결
-workflow.add_edge("tools", "agent")
+workflow.add_edge("tools", "superviser")
 
-workflow.add_edge("agent", END)
+workflow.add_edge("superviser", END)
 
 # 그래프 컴파일
 graph = workflow.compile(checkpointer=memory)
@@ -85,7 +74,7 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
     st.title("StockSageAI")
     st.subheader("주식투자를 위한 챗봇입니다. AI에게 투자결정에 도움받을 수 있는 다양한 분석을 요청해보세요!")
-    
+
 # # 스레드 ID 관리 (사용자별로 고유한 대화 스레드)
 # if "thread_id" not in st.session_state:
 #     import uuid
@@ -124,6 +113,7 @@ if prompt := st.chat_input("메시지를 입력하세요"):
                     if value and "messages" in value:
                         # 새로운 메시지 내용 추출
                         new_content = value["messages"][-1].content
+                        message_placeholder.markdown(new_content)
                         if new_content and isinstance(new_content, str) and new_content != FULL_RESPONSE:
                             # 업데이트된 전체 응답으로 설정
                             FULL_RESPONSE = new_content
