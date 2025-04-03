@@ -1,5 +1,5 @@
 from langgraph.prebuilt import ToolNode
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_anthropic import ChatAnthropic
 from tools.search_tools import search_news, search_DDG
 from graph_state import State
 
@@ -8,17 +8,17 @@ tools = [search_news, search_DDG]
 tool_node = ToolNode(tools)
 
 # Gemini 모델 사용
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-pro-exp-03-25",
+llm = ChatAnthropic(
+    model="claude-3-haiku-20240307",
     temperature=0.1,
-    max_output_tokens=2048
+    max_tokens=2048
 ).bind_tools(tools)
 
 # AI 응답 생성 노드
-def generate_response(state: State) -> State:
-    '''응답을 생성하는 수퍼바이저 LLM'''
+def superviser(state: State) -> State:
+    '''Superviser Agent for Final answer'''
     messages = state["messages"]
-    last_message = messages[-1][1]
+    last_message = messages[-1].content
     stock_data = state.get("stock_data", {})
     
     # AI 시스템 프롬프트
@@ -75,6 +75,6 @@ def generate_response(state: State) -> State:
         response_content = response.content
     
     # 새 메시지 추가
-    new_messages = messages + [("assistant", response_content)]
+    new_messages = [("assistant", response_content)]
     
     return {"messages": new_messages}

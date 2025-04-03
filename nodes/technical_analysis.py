@@ -6,7 +6,7 @@ from graph_state import State
 def technical_analysis(state: State) -> State:
     '''기술적 분석 툴'''
     messages = state["messages"]
-    last_message = messages[-1][1]
+    last_message = messages[-1].content
     
     # 티커 심볼 추출 (대문자 1-5글자)
     ticker_pattern = r'\b[A-Z]{1,5}\b'

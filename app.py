@@ -9,10 +9,10 @@ from dotenv import load_dotenv
 from langgraph.prebuilt import tools_condition
 from utils.visualize import visualize_graph_in_streamlit
 from graph_state import State
-from nodes.generate_reponse import tool_node, generate_response
-from nodes.determine_intent import determine_intent
+from nodes.superviser import tool_node, superviser
+from nodes.determine_intent import determine_intent, router
 from nodes.technical_analysis import technical_analysis
-from nodes.router import router
+
 
 # 환경 변수 로드
 load_dotenv()
@@ -20,12 +20,10 @@ load_dotenv()
 # LangSmith 로깅 설정
 logging.langsmith("pr-dear-ratepayer-64")
 
-
-
 memory = MemorySaver()
 workflow = StateGraph(State)
 # 노드 추가
-workflow.add_node("superviser", generate_response)
+workflow.add_node("superviser", superviser)
 workflow.add_node("tools", tool_node)
 workflow.add_node("determine_intent", determine_intent)
 workflow.add_node("technical_analysis", technical_analysis)
@@ -100,26 +98,20 @@ if prompt := st.chat_input("메시지를 입력하세요"):
     # 응답 준비
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
-        FULL_RESPONSE = ""
-
-        # 스트리밍 응답 처리
-        with st.spinner("생각 중..."):
+        with st.spinner("생각중..."):
+            # 스트리밍 응답 처리
             for event in graph.stream(
                 input={"messages": [("user", prompt)]},
                 config=config,
-                output_keys=["messages"]
             ):
                 for key, value in event.items():
-                    if value and "messages" in value:
+                    print(key+":",value)
+                    if "messages" in value:
                         # 새로운 메시지 내용 추출
-                        new_content = value["messages"][-1].content
+                        new_content = value["messages"][-1][1]
+                        # 화면에 메시지 업데이트
                         message_placeholder.markdown(new_content)
-                        if new_content and isinstance(new_content, str) and new_content != FULL_RESPONSE:
-                            # 업데이트된 전체 응답으로 설정
-                            FULL_RESPONSE = new_content
-                            # 화면에 메시지 업데이트
-                            message_placeholder.markdown(FULL_RESPONSE)
+                        # 결과에서 AI 응답 추출 및 표시
+                        ai_message = AIMessage(content=new_content)
+                        st.session_state.messages.append(ai_message)
     
-    # 결과에서 AI 응답 추출 및 표시
-    ai_message = AIMessage(content=FULL_RESPONSE)
-    st.session_state.messages.append(ai_message)
