@@ -6,7 +6,7 @@ from typing import List, Dict
 
 @tool
 def search_news(query: str) -> List[Dict[str, str]]:
-    """Search Google News by input keyword"""
+    """Search Google News"""
     news_tool = GoogleNews()
     return news_tool.search_by_keyword(query, k=5)
 
