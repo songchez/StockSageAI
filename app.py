@@ -1,5 +1,5 @@
 
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langgraph.graph import StateGraph, END,START
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.runnables import RunnableConfig
@@ -98,6 +98,8 @@ if prompt := st.chat_input("메시지를 입력하세요"):
     # 응답 준비
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
+        TOOL_STATUS = None
+
         with st.spinner("생각중..."):
             # 스트리밍 응답 처리
             for event in graph.stream(
@@ -105,13 +107,22 @@ if prompt := st.chat_input("메시지를 입력하세요"):
                 config=config,
             ):
                 for key, value in event.items():
-                    print(key+":",value)
                     if "messages" in value:
                         # 새로운 메시지 내용 추출
-                        new_content = value["messages"][-1][1]
+                        new_content = value["messages"][-1]
+                        tool_call_message = st.empty()
                         # 화면에 메시지 업데이트
-                        message_placeholder.markdown(new_content)
-                        # 결과에서 AI 응답 추출 및 표시
-                        ai_message = AIMessage(content=new_content)
-                        st.session_state.messages.append(ai_message)
+                        # tool_call 시작시 알림
+                        if hasattr(new_content, 'tool_calls') and new_content.tool_calls:
+                            for call in new_content.tool_calls:
+                                TOOL_STATUS = f"{call["args"]["query"]}에 관련한 자료 {call["name"]}하는 중..."               
+                        elif isinstance(new_content, ToolMessage):
+                            if TOOL_STATUS:
+                                with st.status(TOOL_STATUS):
+                                    st.write(new_content.content)
+                        else:
+                            message_placeholder.markdown(new_content.content)
+                            # 결과에서 AI 응답 추출 및 표시
+                            ai_message = new_content
+                            st.session_state.messages.append(ai_message)
     
