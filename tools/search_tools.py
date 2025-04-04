@@ -13,7 +13,7 @@ def search_news(query: str) -> List[Dict[str, str]]:
 
 # Define a search tool using DuckDuckGo API wrapper
 search_DDG = StructuredTool.from_function(
-        name="Search",
+        name="Web_Search",
         func=DuckDuckGoSearchAPIWrapper().run,  # Executes DuckDuckGo search using the provided query
         description="""
         useful for when you need to answer questions about current events. You should ask targeted questions

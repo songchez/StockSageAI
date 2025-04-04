@@ -1,21 +1,27 @@
+from langchain.tools import StructuredTool
+from typing import Dict, Any
 import yfinance as yf
 import re
-from graph_state import State
 
-
-def technical_analysis(state: State) -> State:
-    '''기술적 분석 툴'''
-    messages = state["messages"]
-    last_message = messages[-1].content
+# 원래 함수를 도구 함수로 변환
+def technical_analysis_tool(query: str) -> Dict[str, Any]:
+    '''
+    주식 심볼을 분석하여 기술적 분석 결과를 제공합니다.
     
+    Args:
+        query: 분석할 주식 심볼 (예: AAPL, MSFT, GOOGL)
+    
+    Returns:
+        Dict: 주식의 기술적 분석 결과를 담은 딕셔너리
+    '''
     # 티커 심볼 추출 (대문자 1-5글자)
     ticker_pattern = r'\b[A-Z]{1,5}\b'
-    potential_tickers = re.findall(ticker_pattern, last_message.upper())
+    potential_tickers = re.findall(ticker_pattern, query.upper())
     
     stock_data = {}
     
     if not potential_tickers:
-        return {"stock_data": {"error": "주식 심볼을 식별할 수 없습니다. 예: AAPL, MSFT, GOOGL"}}
+        return {"error": "주식 심볼을 식별할 수 없습니다. 예: AAPL, MSFT, GOOGL"}
     
     try:
         # 첫 번째 발견된 티커 사용
@@ -40,7 +46,7 @@ def technical_analysis(state: State) -> State:
         hist = stock.history(period="1y")
         
         if len(hist) < 30:
-            return {**state, "stock_data": {**basic_info, "error": "충분한 과거 데이터가 없습니다."}}
+            return {**basic_info, "error": "충분한 과거 데이터가 없습니다."}
         
         # ---- 기술적 지표 계산 ----
         
@@ -272,4 +278,16 @@ def technical_analysis(state: State) -> State:
         error_details = traceback.format_exc()
         stock_data = {"error": f"분석 중 오류 발생: {str(e)}", "error_details": error_details}
     
-    return {"stock_data": stock_data}
+    return stock_data
+
+# StructuredTool로 변환
+technical_analysis = StructuredTool.from_function(
+    name="Technical_Analysis",
+    func=technical_analysis_tool,
+    description="""
+    주식의 기술적 분석을 수행합니다. 이 도구는 주식 심볼을 입력으로 받아 다양한 기술적 지표(이동평균선, RSI, MACD, 볼린저 밴드, 스토캐스틱 등)를 분석하고 
+    종합적인 매수/매도 신호를 제공합니다. 사용자가 주식 투자 결정에 도움이 필요할 때 유용합니다.
+    
+    입력 예시: "AAPL", "MSFT", "GOOGL" 등의 주식 심볼
+    """,
+)

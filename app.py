@@ -1,5 +1,5 @@
 
-from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
+from langchain_core.messages import HumanMessage, ToolMessage
 from langgraph.graph import StateGraph, END,START
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.runnables import RunnableConfig
@@ -10,8 +10,7 @@ from langgraph.prebuilt import tools_condition
 from utils.visualize import visualize_graph_in_streamlit
 from graph_state import State
 from nodes.superviser import tool_node, superviser
-from nodes.determine_intent import determine_intent, router
-from nodes.technical_analysis import technical_analysis
+# from nodes.determine_intent import determine_intent, router
 
 
 # 환경 변수 로드
@@ -25,20 +24,10 @@ workflow = StateGraph(State)
 # 노드 추가
 workflow.add_node("superviser", superviser)
 workflow.add_node("tools", tool_node)
-workflow.add_node("determine_intent", determine_intent)
-workflow.add_node("technical_analysis", technical_analysis)
+# workflow.add_node("determine_intent", determine_intent)
 
 # 엣지 추가
-workflow.add_edge(START, "determine_intent")
-workflow.add_conditional_edges(
-    "determine_intent",
-    router,
-    {
-        "technical_analysis": "technical_analysis",
-        "superviser": "superviser"
-    }
-)
-workflow.add_edge("technical_analysis", "superviser")
+workflow.add_edge(START, "superviser")
 workflow.add_conditional_edges("superviser", tools_condition)
 
 # 도구 노드에서 에이전트 노드로 순환 연결
