@@ -43,7 +43,7 @@ graph = workflow.compile(checkpointer=memory)
 
 config = RunnableConfig(
     recursion_limit=10,  # 최대 10개의 노드까지 방문. 그 이상은 RecursionError 발생
-    configurable={"thread_id": "1"},  # 스레드 ID 설정
+    configurable={"thread_id": "2"},  # 스레드 ID 설정
 )
 
 # Streamlit UI
@@ -99,7 +99,7 @@ if prompt := st.chat_input("메시지를 입력하세요"):
                     if "messages" in value:
                         # 새로운 메시지 내용 추출
                         new_content = value["messages"][-1]
-                        
+
 
                         # 중간메시지
                         if isinstance(new_content, AIMessage) and isinstance(new_content.content, list) and new_content.content:
@@ -113,6 +113,8 @@ if prompt := st.chat_input("메시지를 입력하세요"):
                                     TOOL_STATUS = f"{call["args"]["query"]}에 관련한 자료 검색함"
                                 elif call["name"] == "scrape_finviz_stocks":
                                     TOOL_STATUS = f"{call["name"]}사용해서 주식데이터 가져옴"
+                                elif call["name"] == "Technical_Analysis":
+                                    TOOL_STATUS = f"{call["name"]}사용해서 주식데이터 분석함"
                         elif isinstance(new_content, ToolMessage):
                             if TOOL_STATUS:
                                 with st.status(TOOL_STATUS):

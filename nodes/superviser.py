@@ -15,7 +15,7 @@ tool_node = ToolNode(tools)
 llm = ChatAnthropic(
     model="claude-3-5-haiku-20241022",
     temperature=0.1,
-    max_tokens=2048
+    max_tokens=5048
 ).bind_tools(tools)
 
 # AI 응답 생성 노드
