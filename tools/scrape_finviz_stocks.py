@@ -3,6 +3,10 @@ from langchain.tools import tool
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 
+# import asyncio
+# if hasattr(asyncio, 'WindowsProactorEventLoopPolicy'):
+#     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 @tool
 def scrape_finviz_stocks(
     filter_pe: str = "low",

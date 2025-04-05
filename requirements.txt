@@ -17,3 +17,4 @@ pydantic==2.11.1
 matplotlib==3.10.1
 duckduckgo-search==2025.4.1
 langchain_anthropic==0.3.10
+playwright==1.51.0
