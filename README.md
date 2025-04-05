@@ -51,3 +51,11 @@ streamlit run app.py
 3. 대화 기록은 LangGraph의 MemorySaver를 통해 유지됩니다.
 4. 사용자별로 고유한 스레드 ID를 사용하여 별도의 대화 세션을 유지합니다.
 5. LangSmith를 통해 모든 실행이 로깅되어 디버깅 및 분석이 가능합니다.
+
+## 윈도우일경우 아래 코드를 활성화 해주세요
+
+```python
+# import asyncio
+# if hasattr(asyncio, 'WindowsProactorEventLoopPolicy'):
+#     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+```
